@@ -1,0 +1,35 @@
+package com.example.jumpreset;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.InputUtil;
+import org.lwjgl.glfw.GLFW;
+
+public class JumpResetMod implements ClientModInitializer {
+    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static boolean isEnabled = true; // Trạng thái bật/tắt
+
+    @Override
+    public void onInitializeClient() {
+        // Lắng nghe sự kiện tick của client
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player != null) {
+                // Kiểm tra nếu người chơi đang rơi xuống
+                if (isEnabled && client.player.fallDistance > 2.0) {
+                    client.player.jump(); // Nhảy để reset knockback
+                }
+            }
+        });
+
+        // Lắng nghe sự kiện bàn phím để bật/tắt mod
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player != null && client.currentScreen == null) {
+                if (InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_G)) {
+                    isEnabled = !isEnabled;
+                    client.player.sendMessage(Text.of("Jump Reset: " + (isEnabled ? "ON" : "OFF")), true);
+                }
+            }
+        });
+    }
+}
